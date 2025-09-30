@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>File Installer Wizard</title>
+    <style>
+      /* Основные стили страницы */
+      body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+        margin: 0;
+        padding: 20px;
+      }
+
+      /* Контейнер установщика */
+      .installer {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 20px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Скрытые элементы */
+      .hidden {
+        display: none;
+      }
+
+      /* Стили прогресс-бара */
+      .progress {
+        height: 20px;
+        background: #f0f0f0;
+        border-radius: 10px;
+        margin: 20px 0;
+        overflow: hidden;
+      }
+
+      /* Полоса прогресса */
+      .progress-bar {
+        height: 100%;
+        background: #4caf50;
+        width: 0%;
+        transition: width 0.3s;
+      }
+
+      /* Стили кнопок */
+      button {
+        padding: 10px 20px;
+        margin: 5px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      button:hover {
+        background: #0056b3;
+      }
+
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      /* Строка с кнопками навигации */
+      .btn-row {
+        margin-top: 20px;
+        text-align: right;
+        border-top: 1px solid #eee;
+        padding-top: 15px;
+      }
+
+      /* Стили для списков */
+      ul li {
+        list-style: none;
+        margin: 10px 0;
+      }
+
+      /* Стили для текстовой области лицензии */
+      textarea {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 8px;
+        font-family: inherit;
+        resize: vertical;
+      }
+
+      /* Стили для поля ввода пути */
+      input[type="text"] {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-family: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Основной контейнер установщика -->
+    <div class="installer">
+      <h2>Установщик файлов</h2>
+
+      <!-- Шаг 1: Лицензионное соглашение -->
+      <div class="step" id="step-1">
+        <h3>Лицензионное соглашение</h3>
+        <p>
+          Перед установкой ознакомьтесь с условиями использования. Чтобы
+          продолжить, необходимо принять соглашение.
+        </p>
+        <!-- Текст лицензии -->
+        <textarea rows="6" style="width: 100%" readonly>
+Условия лицензионного соглашения:
+
+1. Вы принимаете условия использования программного обеспечения
+2. Программа предоставляется "как есть"
+3. Запрещается reverse engineering
+4. Коммерческое использование требует отдельной лицензии
+5. Автор не несет ответственности за возможные убытки
+        </textarea>
+        <br />
+        <!-- Кнопки принятия/отказа от лицензии -->
+        <button id="agree-btn">Согласен</button>
+        <button id="disagree-btn">Не согласен</button>
+      </div>
+
+      <!-- Шаг 2: Выбор пути установки -->
+      <div class="step hidden" id="step-2">
+        <h3>Выбор пути установки</h3>
+        <p>Выберите папку, в которую будет установлена программа:</p>
+        <!-- Поле для ввода пути установки -->
+        <input
+          type="text"
+          id="install-path"
+          value="C:/Program Files/MyApp"
+          style="width: 80%"
+        />
+        <!-- Кнопка выбора папки -->
+        <button onclick="browsePath()">Обзор...</button>
+      </div>
+
+      <!-- Шаг 3: Выбор компонентов для установки -->
+      <div class="step hidden" id="step-3">
+        <h3>Выбор компонентов</h3>
+        <p>Выберите компоненты, которые вы хотите установить:</p>
+        <!-- Список компонентов с чекбоксами -->
+        <ul>
+          <li>
+            <label>
+              <input type="checkbox" checked />
+              Основная программа (требуется)
+            </label>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" />
+              Дополнительные модули
+            </label>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" />
+              Документация и справка
+            </label>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" />
+              Примеры и демонстрации
+            </label>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Шаг 4: Процесс установки -->
+      <div class="step hidden" id="step-4">
+        <h3>Установка...</h3>
+        <p>
+          Пожалуйста, подождите, пока программа устанавливается на ваш
+          компьютер.
+        </p>
+        <!-- Прогресс-бар -->
+        <div class="progress">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <!-- Текстовый статус установки -->
+        <div id="status">Подготовка к установке...</div>
+      </div>
+
+      <!-- Шаг 5: Завершение установки -->
+      <div class="step hidden" id="step-5">
+        <h3>Установка завершена!</h3>
+        <p>Программа успешно установлена на ваш компьютер.</p>
+        <!-- Дополнительные опции после установки -->
+        <div style="margin-top: 15px">
+          <label>
+            <input type="checkbox" id="launch-app" checked />
+            Запустить программу после закрытия установщика
+          </label>
+        </div>
+        <div style="margin-top: 10px">
+          <label>
+            <input type="checkbox" id="create-desktop-shortcut" />
+            Создать ярлык на рабочем столе
+          </label>
+        </div>
+      </div>
+
+      <!-- Панель навигации с кнопками -->
+      <div class="btn-row">
+        <!-- Кнопка возврата на предыдущий шаг -->
+        <button id="back-btn" disabled>Назад</button>
+
+        <!-- Кнопка перехода к следующему шагу -->
+        <button id="next-btn" class="hidden">Далее</button>
+
+        <!-- Кнопка начала установки -->
+        <button id="install-btn" class="hidden">Установить</button>
+
+        <!-- Кнопка отмены установки -->
+        <button id="cancel-btn">Отмена</button>
+
+        <!-- Кнопка завершения установки -->
+        <button id="finish-btn" class="hidden">Готово</button>
+      </div>
+    </div>
+
+    <script>
+      // Текущий шаг установки (от 1 до 5)
+      let currentStep = 1;
+      // Общее количество шагов
+      const totalSteps = 5;
+
+      // Получаем ссылки на элементы DOM для кнопок навигации
+      const backBtn = document.getElementById("back-btn");
+      const nextBtn = document.getElementById("next-btn");
+      const installBtn = document.getElementById("install-btn");
+      const cancelBtn = document.getElementById("cancel-btn");
+      const finishBtn = document.getElementById("finish-btn");
+      const agreeBtn = document.getElementById("agree-btn");
+      const disagreeBtn = document.getElementById("disagree-btn");
+
+      /**
+       * Функция отображения текущего шага установки
+       * @param {number} step - номер шага для отображения (1-5)
+       */
+      function showStep(step) {
+        // Скрываем все шаги
+        document
+          .querySelectorAll(".step")
+          .forEach((el) => el.classList.add("hidden"));
+
+        // Показываем текущий шаг
+        document.getElementById(`step-${step}`).classList.remove("hidden");
+
+        // Обновляем состояние кнопок навигации в зависимости от текущего шага
+
+        // Кнопка "Назад" disabled на первом шаге
+        backBtn.disabled = step === 1;
+
+        // Кнопка "Далее" показывается только на шагах 2 и 3
+        nextBtn.classList.toggle("hidden", step >= 3 || step === 1);
+
+        // Кнопка "Установить" показывается только на шаге 3
+        installBtn.classList.toggle("hidden", step !== 3);
+
+        // Кнопка "Готово" показывается только на шаге 5
+        finishBtn.classList.toggle("hidden", step !== 5);
+      }
+
+      // Обработчик кнопки "Согласен" с лицензией
+      agreeBtn.addEventListener("click", () => {
+        currentStep = 2; // Переходим к шагу выбора пути
+        showStep(currentStep);
+      });
+
+      // Обработчик кнопки "Не согласен" с лицензией
+      disagreeBtn.addEventListener("click", () => {
+        alert("Вы отказались от соглашения. Установка будет прервана.");
+        location.reload(); // Перезагружаем страницу
+      });
+
+      // Обработчик кнопки "Назад"
+      backBtn.addEventListener("click", () => {
+        if (currentStep > 1) {
+          currentStep--; // Уменьшаем текущий шаг
+          showStep(currentStep);
+        }
+      });
+
+      // Обработчик кнопки "Далее"
+      nextBtn.addEventListener("click", () => {
+        if (currentStep < 3) {
+          currentStep++; // Увеличиваем текущий шаг
+          showStep(currentStep);
+        }
+      });
+
+      // Обработчик кнопки "Установить"
+      installBtn.addEventListener("click", async () => {
+        currentStep = 4; // Переходим к шагу установки
+        showStep(currentStep);
+        // Запускаем процесс установки
+        await runInstallation();
+      });
+
+      // Обработчик кнопки "Отмена"
+      cancelBtn.addEventListener("click", () => {
+        // Подтверждение отмены установки
+        if (confirm("Вы уверены, что хотите отменить установку?")) {
+          location.reload(); // Перезагружаем страницу
+        }
+      });
+
+      // Обработчик кнопки "Готово"
+      finishBtn.addEventListener("click", () => {
+        // Проверяем дополнительные опции
+        const launchApp = document.getElementById("launch-app").checked;
+        const createShortcut = document.getElementById(
+          "create-desktop-shortcut"
+        ).checked;
+
+        let message = "Спасибо за установку!";
+        if (launchApp) message += "\nПрограмма будет запущена.";
+        if (createShortcut) message += "\nЯрлык создан на рабочем столе.";
+
+        alert(message);
+        // Здесь можно добавить логику для реального запуска программы
+      });
+
+      /**
+       * Функция выбора пути установки (заглушка)
+       * В реальном приложении здесь был бы диалог выбора папки
+       */
+      function browsePath() {
+        alert("В реальном приложении здесь был бы диалог выбора папки");
+        // Пример реализации:
+        // const selectedPath = await showDirectoryPicker();
+        // document.getElementById('install-path').value = selectedPath;
+      }
+
+      /**
+       * Основная функция процесса установки
+       * Имитирует установку с прогресс-баром
+       */
+      async function runInstallation() {
+        // Получаем элементы прогресс-бара и статуса
+        const progressBar = document.getElementById("progress-bar");
+        const status = document.getElementById("status");
+
+        // Этапы установки для отображения прогресса
+        const steps = [
+          "Проверка системных требований...",
+          "Распаковка файлов...",
+          "Копирование файлов...",
+          "Создание ярлыков...",
+          "Запись параметров в реестр...",
+          "Завершение установки...",
+        ];
+
+        // Имитируем процесс установки для каждого этапа
+        for (let i = 0; i < steps.length; i++) {
+          // Обновляем текстовый статус
+          status.textContent = steps[i];
+
+          // Вычисляем и обновляем прогресс (от 0% до 100%)
+          const progress = ((i + 1) / steps.length) * 100;
+          progressBar.style.width = `${progress}%`;
+
+          // Имитируем задержку для каждого этапа (1 секунда)
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+
+        // Переходим к финальному шагу после завершения установки
+        currentStep = 5;
+        showStep(currentStep);
+      }
+
+      // Инициализация: показываем первый шаг при загрузке страницы
+      showStep(currentStep);
+    </script>
+  </body>
+</html>
